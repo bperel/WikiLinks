@@ -1,0 +1,52 @@
+input {
+	width: 200px;
+}
+
+input#max_recursion_level {
+	width: 15px;
+}
+
+#counters {
+	background-color: white;
+	border: 1px solid black;
+	position:fixed;
+	left:0px;
+	width:150px;
+	bottom: 0px;
+	height: 50px;
+	overflow-y: auto;	
+}
+
+#log {
+	position:fixed;
+	right:0;
+	width:500px;
+	top: 0px;
+	height: 100%;
+	overflow-y: auto;
+}
+
+#log p.source_page {
+	text-decoration: underline;
+}
+
+#log p.preexists {
+	font-weight: bold;
+}
+
+#log p.strike {
+	text-decoration : line-through;
+}
+
+
+circle.node {
+  cursor: pointer;
+  stroke: #3182bd;
+  stroke-width: 1.5px;
+}
+
+line.link {
+  fill: none;
+  stroke: #9ecae1;
+  stroke-width: 1.5px;
+}
