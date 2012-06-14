@@ -44,6 +44,10 @@ d3.select('#OK').on('click',function() {
 	});
 });
 
+d3.select('#log_toggle').on('click',function() {
+	d3.select('#log').classed('hidden',! d3.select('#log').classed('hidden'));
+});
+
 
 function fetch(nodes_to_fetch,callback) {
 	var titles=[];

@@ -2,19 +2,21 @@
 <head>
   <script type="text/javascript" src="http://mbostock.github.com/d3/d3.js"></script>
   <script type="text/javascript" src="js/wiki_api.js"></script>
-  <script type="text/javascript" src="js/wikilinks.js"></script>
   <link rel="stylesheet" type="text/css" href="css/wikilinks.css" />
   </head>
   <body>
     <input type="text" id="page1" value="Lord Lieutenant of Dyfed"/> &lt;=&gt; 
 	<input type="text" id="page2" value="William Edwardes, 3rd Baron Kensington"/>
 	<input type="text" id="max_recursion_level" value="1"/>
-	
 	<button id="OK">OK</button>
+	<input id="log_toggle" type="checkbox" checked="checked" />&nbsp;Logs
+	
     <div id="chart"></div>
 	<div id="log"></div>
 	<div id="counters">
 	<span id="api_call_counter">0</span> calls<br />
 	<span id="node_counter">0</span> nodes found<br />
+	
+    <script type="text/javascript" src="js/wikilinks.js"></script>
   </body>
 </html>
