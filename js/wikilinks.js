@@ -23,6 +23,8 @@ d3.select('#OK').on('click',function() {
 	browsed_pages=[];
 	node_titles=[];
 	d3.select('#chart svg').remove();
+	d3.select('#node_counter').text(0);
+	d3.select('#api_call_counter').text(0);
 	
 	name1=d3.select('#page1')[0][0].value,
 	name2=d3.select('#page2')[0][0].value,
@@ -60,24 +62,28 @@ function fetch(nodes_to_fetch,callback) {
 			callback();
 			return;
 		}
+		var source_id= null;
 		for(var page in res.query.pages) {
 			var current_page=res.query.pages[page];
 			d3.select('#log').append('p').classed('source_page',true).text('From '+current_page.title+' : ');
 			var source_pageid=current_page.pageid;
-			var source_id=node_titles.indexOf(current_page.title);
+			source_id=node_titles.indexOf(current_page.title);
 			if (res.query.pages[page].links != undefined) {
 				nodes[source_id].size+=res.query.pages[page].links.length;
 				for (var link in current_page.links) {
 					var new_node=current_page.links[link];
+					var clean_node_title = getCleanNodeTitle(new_node.title);
 					if (browsed_pages[new_node.title] == undefined || browsed_pages[new_node.title] > nodes.length /* JS bug fix */) {
 						var new_node_id=nodes.length;
 						add_node(new_node.title,nodes[source_id].recursion_level+1);
 						add_link(source_id,new_node_id);
-						d3.select('#log').append('p').attr('name',new_node.title.replace(/ /g,'_')).text(new_node.title);
+						d3.select('#log').append('p').attr('name',clean_node_title).text(new_node.title);
 					}
 					else {
 						add_link(source_id,browsed_pages[new_node.title]);
-						d3.select('[name="'+new_node.title.replace(/ /g,'_')+'"]').classed('preexists',true).text(new_node.title+'<==>'+node_titles[source_id]);
+						d3.select('[name="'+clean_node_title+'"]')
+							.classed('preexists',true)
+							.text(new_node.title+'<==>'+node_titles[source_id]);
 						/*callback();
 						return;*/
 					}
@@ -125,7 +131,7 @@ function clean_nodes() { // Removes nodes with only 1 link
 	nb_removed=0;
 	for (var i in nodes) {
 		if (isolated_nodes[nodes[i].id] === true) {
-			d3.select('[name="'+nodes[i].name.replace(/ /g,'_')+'"]').classed('strike',true);
+			d3.select('[name="'+getCleanNodeTitle(nodes[i].name)+'"]').classed('strike',true);
 			nodes_copy.splice(i-nb_removed++,1);
 		}
 	}
@@ -185,7 +191,7 @@ function update() {
 	  .attr("class", "node")
 	  .attr("cx", function(d) { return d.x; })
 	  .attr("cy", function(d) { return d.y; })
-	  .attr("r", function(d) { return 5 })
+	  .attr("r", function(d) { return 5; })
 	  .style("fill", color).append("title")
 	  .text(function(d) { return d.name; })
 	  .on("click", click)
@@ -222,4 +228,11 @@ function click(d) {
   }
 			alert(force.alpha);
   update();
+}
+
+/* Util functions */
+function getCleanNodeTitle(title) {
+	return title
+			.replace(/ /g,'_')
+			.replace(/"/g,'');
 }
