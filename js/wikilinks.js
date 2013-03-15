@@ -59,9 +59,23 @@ function fetch(nodes_to_fetch,callback) {
 	REMOTE_API({action: "query", prop: "links", titles: titles, pllimit: 500, plnamespace: 0}, function (res){ 
 		d3.select('#api_call_counter').text(parseInt(d3.select('#api_call_counter').text())+1);
 		if (res.query == undefined) {
+			nodes=[];
 			callback();
 			return;
 		}
+		var notFound=[];
+		for(var pageId in res.query.pages) {
+			if (pageId == -1) {
+				notFound.push(res.query.pages[pageId].title);
+			}
+		}
+		if (notFound.length > 0) {
+			alert(notFound.join(", ")+" do(es) not exist, aborting !");
+			nodes=[];
+			callback();
+			return;
+		}
+		
 		var source_id= null;
 		for(var page in res.query.pages) {
 			var current_page=res.query.pages[page];
