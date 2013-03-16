@@ -23,6 +23,7 @@ d3.select('#OK').on('click',function() {
 	browsed_pages=[];
 	node_titles=[];
 	d3.select('#chart svg').remove();
+	d3.select('#log').text("");
 	d3.select('#node_counter').text(0);
 	d3.select('#api_call_counter').text(0);
 	
@@ -36,7 +37,9 @@ d3.select('#OK').on('click',function() {
 		clean_nodes();
 		force = d3.layout.force()
 			.on("tick", tick)
-			.size([w, h]);
+			.size([w, h])
+			.gravity(0.2)
+			.charge(-150);
 
 		vis = d3.select("#chart").append("svg:svg")
 			.attr("width", w)
@@ -180,7 +183,7 @@ function update() {
 	  .friction(0.6)
 	  .start();
 
-  // Update the links…
+  // Update the linksï¿½
   link = vis.selectAll("line.link")
 	  .data(links, function(d) { return d.target.id; });
 
@@ -195,7 +198,7 @@ function update() {
   // Exit any old links.
   link.exit().remove();
 
-  // Update the nodes…
+  // Update the nodesï¿½
   node = vis.selectAll("circle.node")
 	  .data(nodes, function(d) { return d.id; })
 	  .style("fill", color);
@@ -208,7 +211,6 @@ function update() {
 	  .attr("r", function(d) { return 5; })
 	  .style("fill", color).append("title")
 	  .text(function(d) { return d.name; })
-	  .on("click", click)
 	  .call(force.drag);
 
   // Exit any old nodes.
