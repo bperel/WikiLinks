@@ -1,11 +1,11 @@
-var w = 960,
+var svg,
+	w = 960,
 	h = 500,
 	node,
 	link,
 	nodes,
 	links,
 	force,
-	vis,
 	fetched_pages,
 	browsed_pages,
 	queued_pages,
@@ -43,9 +43,14 @@ d3.select('#OK').on('click',function() {
 			.gravity(0.2)
 			.charge(-150);
 
-		vis = d3.select("#chart").append("svg:svg")
+		svg = d3.select("#chart").append("svg:svg")
 			.attr("width", w)
-			.attr("height", h);
+			.attr("height", h)
+			.call(d3.behavior.zoom()
+				.on("zoom",function() {
+					svg.selectAll("svg>line,svg>circle").attr("transform", "translate(" +  d3.event.translate[0] + "," + d3.event.translate[1] + ") scale(" +  d3.event.scale + ")"); 	
+				}));
+
 
 		update();
 	});
@@ -194,7 +199,7 @@ function update() {
 	  .start();
 
   // Update the links
-  link = vis.selectAll("line.link")
+  link = svg.selectAll("line.link")
 	  .data(links, function(d) { return d.target.id; });
 
   // Enter any new links.
@@ -209,7 +214,7 @@ function update() {
   link.exit().remove();
 
   // Update the nodes
-  node = vis.selectAll("circle.node")
+  node = svg.selectAll("circle.node")
 	  .data(nodes, function(d) { return d.id; })
 	  .style("fill", color);
 
