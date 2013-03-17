@@ -6,11 +6,12 @@ var w = 960,
 	links,
 	force,
 	vis,
+	fetched_pages,
 	browsed_pages,
+	queued_pages,
 	name1,
 	name2,
 	max_recursion_level,
-	queued_pages,
 	link_found=false,
 	node_titles;
 	
@@ -21,6 +22,7 @@ d3.select('#OK').on('click',function() {
 	nodes=[];
 	links=[];
 	browsed_pages=[];
+	fetched_pages=[];
 	node_titles=[];
 	d3.select('#chart svg').remove();
 	d3.select('#log').text("");
@@ -33,7 +35,7 @@ d3.select('#OK').on('click',function() {
 		
 	add_node(name1,0);
 	add_node(name2,0);
-	fetch(nodes.slice(0),function() {
+	fetch(nodes.slice(0),false,function() {
 		clean_nodes();
 		force = d3.layout.force()
 			.on("tick", tick)
@@ -54,70 +56,78 @@ d3.select('#log_toggle').on('click',function() {
 });
 
 
-function fetch(nodes_to_fetch,callback) {
+function fetch(nodes_to_fetch,just_store,callback) {
 	var titles=[];
 	for (var i in nodes_to_fetch) {
 		titles.push(nodes_to_fetch[i].name);
 	}
 	REMOTE_API({action: "query", prop: "links", titles: titles, pllimit: 500, plnamespace: 0}, function (res){ 
 		d3.select('#api_call_counter').text(parseInt(d3.select('#api_call_counter').text())+1);
-		if (res.query == undefined) {
-			nodes=[];
-			callback();
-			return;
-		}
-		var notFound=[];
-		for(var pageId in res.query.pages) {
-			if (pageId == -1) {
-				notFound.push(res.query.pages[pageId].title);
-			}
-		}
-		if (notFound.length > 0) {
-			alert(notFound.join(", ")+" do(es) not exist, aborting !");
-			nodes=[];
-			callback();
-			return;
-		}
-		
-		var source_id= null;
 		for(var page in res.query.pages) {
-			var current_page=res.query.pages[page];
-			d3.select('#log').append('p').classed('source_page',true).text('From '+current_page.title+' : ');
-			var source_pageid=current_page.pageid;
-			source_id=node_titles.indexOf(current_page.title);
-			if (res.query.pages[page].links != undefined) {
-				nodes[source_id].size+=res.query.pages[page].links.length;
-				for (var link in current_page.links) {
-					var new_node=current_page.links[link];
-					var clean_node_title = getCleanNodeTitle(new_node.title);
-					if (browsed_pages[new_node.title] == undefined || browsed_pages[new_node.title] > nodes.length /* JS bug fix */) {
-						var new_node_id=nodes.length;
-						add_node(new_node.title,nodes[source_id].recursion_level+1);
-						add_link(source_id,new_node_id);
-						d3.select('#log').append('p').attr('name',clean_node_title).text(new_node.title);
-					}
-					else {
-						add_link(source_id,browsed_pages[new_node.title]);
-						d3.select('[name="'+clean_node_title+'"]')
-							.classed('preexists',true)
-							.text(new_node.title+'<==>'+node_titles[source_id]);
-						/*callback();
-						return;*/
-					}
+			fetched_pages[page]=res.query.pages[page];
+		}
+		if (!just_store) {
+			if (res.query == undefined) {
+				nodes=[];
+				callback();
+				return;
+			}
+			/*var notFound=[];
+			for(var pageId in res.query.pages) {
+				if (pageId == -1) {
+					notFound.push(res.query.pages[pageId].title);
 				}
 			}
-			browsed_pages[current_page.title]=source_pageid;
-		}
-		if (nodes[source_id].recursion_level < max_recursion_level) {
-			queued_pages=[];
-			for(var i=0;i<nodes.length && queued_pages.length < MAX_PAGES_NUMBER_PER_REQUEST;i++) {
-				if (nodes[i].recursion_level == nodes[source_id].recursion_level+1)
-					queued_pages.push(nodes[i]);
+			if (notFound.length > 0) {
+				alert(notFound.join(", ")+" do(es) not exist, aborting !");
+				nodes=[];
+				callback();
+				return;
+			}*/
+			
+			var source_id= null;
+			for(var page in fetched_pages) {
+				var current_page=fetched_pages[page];
+				d3.select('#log').append('p').classed('source_page',true).text('From '+current_page.title+' : ');
+				var source_pageid=current_page.pageid;
+				source_id=node_titles.indexOf(current_page.title);
+				if (current_page.links != undefined) {
+					nodes[source_id].size+=current_page.links.length;
+					for (var link in current_page.links) {
+						var new_node=current_page.links[link];
+						var clean_node_title = getCleanNodeTitle(new_node.title);
+						if (browsed_pages[new_node.title] == undefined || browsed_pages[new_node.title] > nodes.length /* JS bug fix */) {
+							var new_node_id=nodes.length;
+							add_node(new_node.title,nodes[source_id].recursion_level+1);
+							add_link(source_id,new_node_id);
+							d3.select('#log').append('p').attr('name',clean_node_title).text(new_node.title);
+						}
+						else {
+							add_link(source_id,browsed_pages[new_node.title]);
+							d3.select('[name="'+clean_node_title+'"]')
+								.classed('preexists',true)
+								.text(new_node.title+'<==>'+node_titles[source_id]);
+							/*callback();
+							return;*/
+						}
+					}
+				}
+				browsed_pages[current_page.title]=source_pageid;
 			}
-			fetch(queued_pages,callback);
+			if (nodes[source_id].recursion_level < max_recursion_level) {
+				var i=0;
+				while (i<nodes.length) {
+					queued_pages=[];
+					for(i;i<nodes.length && queued_pages.length < MAX_PAGES_NUMBER_PER_REQUEST;i++) {
+						if (nodes[i].recursion_level == nodes[source_id].recursion_level+1)
+							queued_pages.push(nodes[i]);
+					}
+					fetch(queued_pages,i<nodes.length,callback);
+				}
+			}
+			else
+				callback();
 		}
-		else
-			callback();
 	});
 }
 
