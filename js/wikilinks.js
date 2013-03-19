@@ -35,7 +35,7 @@ d3.select('#OK').on('click',function() {
 		
 	add_node(name1,0);
 	add_node(name2,0);
-	fetch(nodes.slice(0),false,function() {
+	fetch(nodes.slice(0),false,false,function() {
 		clean_nodes();
 		force = d3.layout.force()
 			.on("tick", tick)
@@ -61,17 +61,30 @@ d3.select('#log_toggle').on('click',function() {
 });
 
 
-function fetch(nodes_to_fetch,just_store,callback) {
+function fetch(nodes_to_fetch,just_store,plcontinue,callback) {
 	var titles=[];
 	for (var i in nodes_to_fetch) {
 		titles.push(nodes_to_fetch[i].name);
 	}
-	REMOTE_API({action: "query", prop: "links", titles: titles, pllimit: 500, plnamespace: 0}, function (res){ 
+	var parameters={action: "query", prop: "links", titles: titles, pllimit: 500, plnamespace: 0};
+	if (plcontinue) {
+		parameters["continue"]="||";
+		parameters["plcontinue"]=plcontinue;
+	}
+	else {
+		parameters["continue"]="";
+	}
+	REMOTE_API(parameters, function (res){ 
 		d3.select('#api_call_counter').text(parseInt(d3.select('#api_call_counter').text())+1);
 		for(var page in res.query.pages) {
+			if (!fetched_pages[page] || !fetched_pages[page].links)
 			fetched_pages[page]=res.query.pages[page];
 		}
-		if (!just_store) {
+		
+		if (res["continue"]) {
+			fetch(nodes_to_fetch,just_store,res["continue"]["plcontinue"],callback);
+		}
+		if (!just_store && !res["continue"]) {
 			if (res.query == undefined) {
 				nodes=[];
 				callback();
@@ -101,7 +114,8 @@ function fetch(nodes_to_fetch,just_store,callback) {
 					for (var link in current_page.links) {
 						var new_node=current_page.links[link];
 						var clean_node_title = getCleanNodeTitle(new_node.title);
-						if (browsed_pages[new_node.title] == undefined || browsed_pages[new_node.title] > nodes.length /* JS bug fix */) {
+						if ((browsed_pages[new_node.title] == undefined || browsed_pages[new_node.title] == source_id)
+						  || browsed_pages[new_node.title] > nodes.length /* JS bug fix */) {
 							var new_node_id=nodes.length;
 							add_node(new_node.title,nodes[source_id].recursion_level+1);
 							add_link(source_id,new_node_id);
@@ -109,6 +123,7 @@ function fetch(nodes_to_fetch,just_store,callback) {
 						}
 						else {
 							add_link(source_id,browsed_pages[new_node.title]);
+							nodes[browsed_pages[new_node.title]].crossfound=true;
 							d3.select('[name="'+clean_node_title+'"]')
 								.classed('preexists',true)
 								.text(new_node.title+'<==>'+node_titles[source_id]);
@@ -123,11 +138,11 @@ function fetch(nodes_to_fetch,just_store,callback) {
 				var i=0;
 				while (i<nodes.length) {
 					queued_pages=[];
-					for(i;i<nodes.length && queued_pages.length < MAX_PAGES_NUMBER_PER_REQUEST;i++) {
+					for(;i<nodes.length && queued_pages.length < MAX_PAGES_NUMBER_PER_REQUEST;i++) {
 						if (nodes[i].recursion_level == nodes[source_id].recursion_level+1)
 							queued_pages.push(nodes[i]);
 					}
-					fetch(queued_pages,i<nodes.length,callback);
+					fetch(queued_pages,i<nodes.length,false,callback);
 				}
 			}
 			else
@@ -138,7 +153,7 @@ function fetch(nodes_to_fetch,just_store,callback) {
 
 function add_node(title,recursion_level) {
 	var id=nodes.length;
-	nodes.push({'id':id,'name':title,'recursion_level':recursion_level,'size':1});
+	nodes[id]=({'id':id, 'name':title,'recursion_level':recursion_level,'size':1});
 	node_titles[id]=title;
 	browsed_pages[title]=id;
 	d3.select('#node_counter').text(parseInt(d3.select('#node_counter').text())+1);
@@ -154,7 +169,7 @@ function clean_nodes() { // Removes nodes with only 1 link
 	var nodes_copy=nodes.slice(0);
 	var links_copy=links.slice(0);var nb_removed;
 	
-	for (var i in links) {
+	/*for (var i in links) {
 		for (var j in sides) {
 			isolated_nodes[links[i][sides[j]].id] = isolated_nodes[links[i][sides[j]].id] === undefined ? true : false;
 		}
@@ -176,7 +191,7 @@ function clean_nodes() { // Removes nodes with only 1 link
 				break;
 			}
 		}
-	}
+	}*/
 	nodes=nodes_copy;
 	links=links_copy;
 }
@@ -203,15 +218,15 @@ function update() {
 	  .data(links, function(d) { return d.target.id; });
 
   // Enter any new links.
-  link.enter().insert("svg:line", ".node")
-	  .attr("class", "link")
-	  .attr("x1", function(d) { return d.source.x; })
+  link.enter().append("svg:line")
+  .attr("class", "link");
+	  /*.attr("x1", function(d) { return d.source.x; })
 	  .attr("y1", function(d) { return d.source.y; })
 	  .attr("x2", function(d) { return d.target.x; })
-	  .attr("y2", function(d) { return d.target.y; });
+	  .attr("y2", function(d) { return d.target.y; });*/
 
   // Exit any old links.
-  link.exit().remove();
+  //link.exit().remove();
 
   // Update the nodes
   node = svg.selectAll("circle.node")
@@ -221,8 +236,8 @@ function update() {
   // Enter any new nodes.
   node.enter().append("svg:circle")
 	  .attr("class", "node")
-	  .attr("cx", function(d) { return d.x; })
-	  .attr("cy", function(d) { return d.y; })
+	  //.attr("cx", function(d) { return d.x; })
+	  //.attr("cy", function(d) { return d.y; })
 	  .attr("r", function(d) { return 5; })
 	  .style("fill", color).append("title")
 	  .text(function(d) { return d.name; })
@@ -243,6 +258,9 @@ function tick() {
 }
 
 function color(d) {
+	if (d.crossfound) {
+		return "#ff0000";
+	}
   var level_on_15=parseInt(15*(d.recursion_level / (max_recursion_level+1)));
   var digit=level_on_15<10 ? level_on_15 : String.fromCharCode("a".charCodeAt(0)+(level_on_15-10));
   return "#"+digit+""+digit+""+digit;

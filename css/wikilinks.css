@@ -49,8 +49,11 @@ circle.node {
   stroke-width: 1.5px;
 }
 
-line.link {
-  fill: none;
+line {
   stroke: #9ecae1;
   stroke-width: 1.5px;
+}
+
+line.preexists {
+  stroke: #ff0000;	
 }
