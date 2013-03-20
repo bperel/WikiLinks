@@ -34,8 +34,8 @@ d3.select('#OK').on('click',function() {
 	name2=d3.select('#page2')[0][0].value,
 	max_recursion_level=parseInt(d3.select('#max_recursion_level')[0][0].value)-1;
 		
-	add_node(name1,0);
-	add_node(name2,0);
+	add_node(0,name1,0);
+	add_node(1,name2,0);
 	fetch(nodes.slice(0),false,false,function() {
 		clean_nodes();
 		force = d3.layout.force()
@@ -121,7 +121,7 @@ function fetch(nodes_to_fetch,just_store,plcontinue,callback) {
 						if ((browsed_pages[new_node.title] == undefined || browsed_pages[new_node.title] == source_id)
 						  || browsed_pages[new_node.title] > nodes.length /* JS bug fix */) {
 							var new_node_id=nodes.length;
-							add_node(new_node.title,nodes[source_id].recursion_level+1);
+							add_node(new_node_id,new_node.title,nodes[source_id].recursion_level+1);
 							add_link(source_id,new_node_id);
 							d3.select('#log').append('p').attr('name',clean_node_title).text(new_node.title);
 						}
@@ -156,8 +156,7 @@ function fetch(nodes_to_fetch,just_store,plcontinue,callback) {
 	});
 }
 
-function add_node(title,recursion_level) {
-	var id=nodes.length;
+function add_node(id,title,recursion_level) {
 	nodes[id]=({'id':id, 'name':title,'recursion_level':recursion_level,'size':1});
 	node_titles[id]=title;
 	browsed_pages[title]=id;
