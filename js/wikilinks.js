@@ -26,7 +26,8 @@ d3.select('#OK').on('click',function() {
 	node_titles=[];
 	d3.select('#chart svg').remove();
 	d3.select('#log').text("");
-	d3.select('#node_counter').text(0);
+	d3.select('#articles_found_counter').text(0);
+	d3.select('#articles_browsed_counter').text(0);
 	d3.select('#api_call_counter').text(0);
 	
 	name1=d3.select('#page1')[0][0].value,
@@ -77,9 +78,12 @@ function fetch(nodes_to_fetch,just_store,plcontinue,callback) {
 	REMOTE_API(parameters, function (res){ 
 		d3.select('#api_call_counter').text(parseInt(d3.select('#api_call_counter').text())+1);
 		for(var page in res.query.pages) {
-			if (!fetched_pages[page] || !fetched_pages[page].links)
-			fetched_pages[page]=res.query.pages[page];
+			if (!fetched_pages[page] || !fetched_pages[page].links) {
+				fetched_pages[page]=res.query.pages[page];
+			}
 		}
+		d3.select('#articles_found_counter')
+			.text(parseInt(d3.select('#articles_found_counter').text())+Object.size(res.query.pages));
 		
 		if (res["continue"]) {
 			fetch(nodes_to_fetch,just_store,res["continue"]["plcontinue"],callback);
@@ -127,13 +131,14 @@ function fetch(nodes_to_fetch,just_store,plcontinue,callback) {
 							d3.select('[name="'+clean_node_title+'"]')
 								.classed('preexists',true)
 								.text(new_node.title+'<==>'+node_titles[source_id]);
-							/*callback();
-							return;*/
 						}
 					}
 				}
 				browsed_pages[current_page.title]=source_pageid;
 			}
+			d3.select('#articles_browsed_counter')
+				.text(parseInt(d3.select('#articles_browsed_counter').text())+Object.size(fetched_pages));
+			
 			if (nodes[source_id].recursion_level < max_recursion_level) {
 				var i=0;
 				while (i<nodes.length) {
@@ -156,7 +161,6 @@ function add_node(title,recursion_level) {
 	nodes[id]=({'id':id, 'name':title,'recursion_level':recursion_level,'size':1});
 	node_titles[id]=title;
 	browsed_pages[title]=id;
-	d3.select('#node_counter').text(parseInt(d3.select('#node_counter').text())+1);
 }
 
 function add_link(source_id,target_id) {
@@ -285,3 +289,11 @@ function getCleanNodeTitle(title) {
 			.replace(/ /g,'_')
 			.replace(/"/g,'');
 }
+
+Object.size = function(obj) {
+    var size = 0, key = null;
+    for (key in obj) {
+        if (obj.hasOwnProperty(key)) size++;
+    }
+    return size;
+};
