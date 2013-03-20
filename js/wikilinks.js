@@ -32,8 +32,13 @@ d3.select('#OK').on('click',function() {
 	
 	name1=d3.select('#page1')[0][0].value,
 	name2=d3.select('#page2')[0][0].value,
-	max_recursion_level=parseInt(d3.select('#max_recursion_level')[0][0].value)-1;
-		
+	max_recursion_level=parseInt(d3.select('#max_recursion_level')[0][0].value);
+	if (max_recursion_level > 2) {
+		alert("Sorry, for the moment the recursion level can't be set to higher than 2. "
+			+ "Of course you can easily hack the code but don't complain afterwards !");
+		return;
+	}
+	max_recursion_level-=1;
 	add_node(0,name1,0);
 	add_node(1,name2,0);
 	fetch(nodes.slice(0),false,false,function() {
@@ -94,18 +99,6 @@ function fetch(nodes_to_fetch,just_store,plcontinue,callback) {
 				callback();
 				return;
 			}
-			/*var notFound=[];
-			for(var pageId in res.query.pages) {
-				if (pageId == -1) {
-					notFound.push(res.query.pages[pageId].title);
-				}
-			}
-			if (notFound.length > 0) {
-				alert(notFound.join(", ")+" do(es) not exist, aborting !");
-				nodes=[];
-				callback();
-				return;
-			}*/
 			
 			var source_id= null;
 			for(var page in fetched_pages) {
