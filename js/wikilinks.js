@@ -51,7 +51,7 @@ d3.select('#log_toggle').on('click',function() {
 });
 
 
-function fetch(nodes_to_fetch,just_store,plcontinue) {
+function fetch(nodes_to_fetch,plcontinue) {
 	var titles=[];
 	for (var i in nodes_to_fetch) {
 		titles.push(nodes_to_fetch[i].name);
@@ -75,25 +75,22 @@ function fetch(nodes_to_fetch,just_store,plcontinue) {
 			.text(parseInt(d3.select('#articles_found_counter').text())+Object.size(res.query.pages));
 		
 		if (res["continue"]) {
-			fetch(nodes_to_fetch,just_store,res["continue"]["plcontinue"]);
+			fetch(nodes_to_fetch,res["continue"]["plcontinue"]);
 		}
 		else {
 			var next_pages_to_fetch=get_next_pages_to_fetch();
 			if (Object.size(next_pages_to_fetch) > 0) {
-				fetch(next_pages_to_fetch,just_store,false);
+				fetch(next_pages_to_fetch,false);
 			}
 			else {
-                if (!just_store) {
-				    analyze(just_store,res);
-                
-                }
+                analyze(res);
 				fetch_for_next_recursivity_level();
 			}
 		}
 	});
 }
 
-function analyze(just_store,res) {
+function analyze(res) {
 	if (res.query == undefined) {
 		return;
 	}
