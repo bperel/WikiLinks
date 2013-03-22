@@ -82,8 +82,11 @@ function fetch(nodes_to_fetch,just_store,plcontinue) {
 			if (Object.size(next_pages_to_fetch) > 0) {
 				fetch(next_pages_to_fetch,just_store,false);
 			}
-			else if (!just_store) {
-				analyze(just_store,res);
+			else {
+                if (!just_store) {
+				    analyze(just_store,res);
+                
+                }
 				fetch_for_next_recursivity_level();
 			}
 		}
