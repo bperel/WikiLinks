@@ -146,7 +146,7 @@ function fetch_for_next_recursivity_level() {
 		last_page_to_fetch=0;
 		var pages_to_fetch = get_next_pages_to_fetch();
 		var just_store = last_page_to_fetch < Object.size(queued_pages);
-		fetch(pages_to_fetch,just_store,false);
+		fetch(pages_to_fetch,false);
 	}
 	else {
 		render();
