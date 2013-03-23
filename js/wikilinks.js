@@ -239,7 +239,7 @@ function update() {
 
   // Update the links
   link = svg.selectAll("line.link")
-	  .data(links, function(d) { return d.target.id; });
+	  .data(links);
 
   // Enter any new links.
   link.enter().append("svg:line")
@@ -282,10 +282,10 @@ function tick() {
 }
 
 function color(d) {
-	if (d.crossfound) {
-		return "#ff0000";
-	}
   var level_on_15=parseInt(15*(d.recursion_level / (max_recursion_level+1)));
+  if (level_on_15 > 0 && d.crossfound) {
+	return "#ff0000";
+  }
   var digit=level_on_15<10 ? level_on_15 : String.fromCharCode("a".charCodeAt(0)+(level_on_15-10));
   return "#"+digit+""+digit+""+digit;
 }
