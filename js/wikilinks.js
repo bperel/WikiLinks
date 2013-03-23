@@ -71,9 +71,6 @@ function fetch(nodes_to_fetch,plcontinue) {
 				fetched_pages[page]=res.query.pages[page];
 			}
 		}
-		d3.select('#articles_found_counter')
-			.text(parseInt(d3.select('#articles_found_counter').text())+Object.size(res.query.pages));
-		
 		if (res["continue"]) {
 			fetch(nodes_to_fetch,res["continue"]["plcontinue"]);
 		}
@@ -120,6 +117,9 @@ function analyze(res) {
 						.text(new_node.title+'<==>'+node_titles[source_id]);
 				}
 			}
+			d3.select('#articles_found_counter')
+				.text(parseInt(d3.select('#articles_found_counter').text())+Object.size(current_page.links));
+			
 		}
 	}
 	d3.select('#articles_browsed_counter')
