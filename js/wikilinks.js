@@ -179,9 +179,8 @@ function render() {
 		.attr("height", h)
 		.call(d3.behavior.zoom()
 			.on("zoom",function() {
-				svg.selectAll("svg>line,svg>circle").attr("transform", "translate(" +  d3.event.translate[0] + "," + d3.event.translate[1] + ") scale(" +  d3.event.scale + ")"); 	
+				svg.selectAll("svg>g").attr("transform", "translate(" +  d3.event.translate[0] + "," + d3.event.translate[1] + ") scale(" +  d3.event.scale + ")"); 	
 			}));
-
 
 	update();
 }
@@ -203,8 +202,11 @@ function update() {
 	  .friction(0.6)
 	  .start();
 
+  svg.selectAll('g').remove();
+  var g = svg.append("svg:g");
+	
   // Update the links
-  link = svg.selectAll("line.link")
+  link = g.selectAll("line.link")
 	  .data(links);
 
   // Enter any new links.
@@ -212,7 +214,7 @@ function update() {
   .attr("class", "link");
   
   // Update the nodes
-  node = svg.selectAll("circle.node")
+  node = g.selectAll("circle.node")
 	  .data(nodes, function(d) { return d.id; })
 	  .style("fill", color);
 
