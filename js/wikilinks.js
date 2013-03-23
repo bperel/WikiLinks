@@ -22,8 +22,8 @@ var REMOTE_API = JsMwApi("http://en.wikipedia.org/w/api.php");
 d3.select('#OK').on('click',function() {
 	nodes=[];
 	links=[];
-	browsed_pages=[];
-	fetched_pages=[];
+	browsed_pages={};
+	fetched_pages={};
 	node_titles=[];
 	queued_pages=[];
 	current_recursivity_level=0;
@@ -98,30 +98,29 @@ function analyze(res) {
 	for(var page in fetched_pages) {
 		var current_page=fetched_pages[page];
 		d3.select('#log').append('p').classed('source_page',true).text('From '+current_page.title+' : ');
-		var source_pageid=current_page.pageid;
 		source_id=node_titles.indexOf(current_page.title);
 		if (current_page.links != undefined) {
-			nodes[source_id].size+=current_page.links.length;
+			nodes[source_id].size+=Object.size(current_page.links);
 			for (var link in current_page.links) {
 				var new_node=current_page.links[link];
 				var clean_node_title = getCleanNodeTitle(new_node.title);
-				if ((browsed_pages[new_node.title] == undefined || browsed_pages[new_node.title] == source_id)
-				  || browsed_pages[new_node.title] > nodes.length /* JS bug fix */) {
-					var new_node_id=nodes.length;
+				if (browsed_pages[new_node.title] == undefined) {
+					var new_node_id=Object.size(nodes);
 					add_node(new_node_id,new_node.title,nodes[source_id].recursion_level+1);
 					add_link(source_id,new_node_id);
 					d3.select('#log').append('p').attr('name',clean_node_title).text(new_node.title);
 				}
 				else {
 					add_link(source_id,browsed_pages[new_node.title]);
-					nodes[browsed_pages[new_node.title]].crossfound=true;
+					nodes.filter(function(d) { 
+						return d.name == new_node.title; })[0]
+						.crossfound=true;
 					d3.select('[name="'+clean_node_title+'"]')
 						.classed('preexists',true)
 						.text(new_node.title+'<==>'+node_titles[source_id]);
 				}
 			}
 		}
-		browsed_pages[current_page.title]=source_pageid;
 	}
 	d3.select('#articles_browsed_counter')
 		.text(parseInt(d3.select('#articles_browsed_counter').text())+Object.size(fetched_pages));
@@ -145,7 +144,6 @@ function fetch_for_next_recursivity_level() {
 	if (current_recursivity_level < max_recursion_level) {
 		last_page_to_fetch=0;
 		var pages_to_fetch = get_next_pages_to_fetch();
-		var just_store = last_page_to_fetch < Object.size(queued_pages);
 		fetch(pages_to_fetch,false);
 	}
 	else {
