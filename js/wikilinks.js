@@ -168,7 +168,6 @@ function get_next_pages_to_fetch() {
 }
 
 function render() {
-	clean_nodes();
 	force = d3.layout.force()
 		.on("tick", tick)
 		.size([w, h])
@@ -185,39 +184,6 @@ function render() {
 
 
 	update();
-}
-
-function clean_nodes() { // Removes nodes with only 1 link
-	var isolated_nodes=[];
-	var sides=['source','target'];
-	var nodes_copy=nodes.slice(0);
-	var links_copy=links.slice(0);var nb_removed;
-	
-	/*for (var i in links) {
-		for (var j in sides) {
-			isolated_nodes[links[i][sides[j]].id] = isolated_nodes[links[i][sides[j]].id] === undefined ? true : false;
-		}
-	}
-	
-	nb_removed=0;
-	for (var i in nodes) {
-		if (isolated_nodes[nodes[i].id] === true) {
-			d3.select('[name="'+getCleanNodeTitle(nodes[i].name)+'"]').classed('strike',true);
-			nodes_copy.splice(i-nb_removed++,1);
-		}
-	}
-	
-	nb_removed=0;
-	for (var i in links) {
-		for (var j in sides) {
-			if (isolated_nodes[links[i][sides[j]].id] === true) {
-				links_copy.splice(i-nb_removed++,1);
-				break;
-			}
-		}
-	}*/
-	nodes=nodes_copy;
-	links=links_copy;
 }
 
 function get_normalized_title(title, list) {
@@ -244,14 +210,7 @@ function update() {
   // Enter any new links.
   link.enter().append("svg:line")
   .attr("class", "link");
-	  /*.attr("x1", function(d) { return d.source.x; })
-	  .attr("y1", function(d) { return d.source.y; })
-	  .attr("x2", function(d) { return d.target.x; })
-	  .attr("y2", function(d) { return d.target.y; });*/
-
-  // Exit any old links.
-  //link.exit().remove();
-
+  
   // Update the nodes
   node = svg.selectAll("circle.node")
 	  .data(nodes, function(d) { return d.id; })
@@ -260,8 +219,6 @@ function update() {
   // Enter any new nodes.
   node.enter().append("svg:circle")
 	  .attr("class", "node")
-	  //.attr("cx", function(d) { return d.x; })
-	  //.attr("cy", function(d) { return d.y; })
 	  .attr("r", function(d) { return 5; })
 	  .style("fill", color).append("title")
 	  .text(function(d) { return d.name; })
