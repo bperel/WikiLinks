@@ -168,6 +168,10 @@ function get_next_pages_to_fetch() {
 }
 
 function render() {
+	var ignore_isolated_nodes=!d3.select('#ignore_selected_toggle:checked').empty();
+	if (ignore_isolated_nodes) {
+		clean_nodes();
+	}
 	force = d3.layout.force()
 		.on("tick", tick)
 		.size([w, h])
@@ -191,6 +195,39 @@ function get_normalized_title(title, list) {
 			return list[i].from;
 	}
 	return undefined;
+}
+
+function clean_nodes() {
+	var isolated_nodes=[];
+	var sides=['source','target'];
+	var nodes_copy=nodes.slice(0);
+	var links_copy=links.slice(0);var nb_removed;
+	
+	for (var i in links) {
+		for (var j in sides) {
+			isolated_nodes[links[i][sides[j]].id] = isolated_nodes[links[i][sides[j]].id] === undefined ? true : false;
+		}
+	}
+	
+	nb_removed=0;
+	for (var i in nodes) {
+		if (isolated_nodes[nodes[i].id] === true) {
+			d3.select('[name="'+getCleanNodeTitle(nodes[i].name)+'"]').classed('strike',true);
+			nodes_copy.splice(i-nb_removed++,1);
+		}
+	}
+	
+	nb_removed=0;
+	for (var i in links) {
+		for (var j in sides) {
+			if (isolated_nodes[links[i][sides[j]].id] === true) {
+				links_copy.splice(i-nb_removed++,1);
+				break;
+			}
+		}
+	}
+	nodes=nodes_copy;
+	links=links_copy;
 }
 
 function update() {
